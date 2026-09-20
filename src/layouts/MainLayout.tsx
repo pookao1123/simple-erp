@@ -1,13 +1,14 @@
 import { useEffect, useState } from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
 import Button from '../components/Button';
+import { useAuth } from '../contexts/AuthContext';
 
-const navItems = [
+const navItems: { to: string; label: string; end?: boolean; roles?: string[] }[] = [
   { to: '/', label: 'Dashboard', end: true },
   { to: '/invoices', label: 'Invoices' },
   { to: '/customers', label: 'Customers' },
   { to: '/products', label: 'Products' },
-  { to: '/settings', label: 'Settings' },
+  { to: '/settings', label: 'Settings', roles: ['admin', 'manager'] },
 ];
 
 const THEME_KEY = 'theme';
@@ -20,6 +21,10 @@ export default function MainLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false); // mobile drawer
   const [collapsed, setCollapsed] = useState(false); // tablet collapse
   const [dark, setDark] = useState(getInitialDark);
+  const { effectiveRole } = useAuth();
+  const visibleNav = navItems.filter(
+    (item) => !item.roles || (effectiveRole !== null && item.roles.includes(effectiveRole)),
+  );
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', dark);
@@ -43,7 +48,7 @@ export default function MainLayout() {
       >
         <div className="flex h-16 items-center px-6 text-xl font-bold">Simple ERP</div>
         <nav className="space-y-1 px-3">
-          {navItems.map((item) => (
+          {visibleNav.map((item) => (
             <NavLink
               key={item.to}
               to={item.to}
@@ -92,6 +97,12 @@ export default function MainLayout() {
             >
               {dark ? 'Light' : 'Dark'}
             </button>
+            <span
+              className="rounded-full bg-slate-200 px-2.5 py-1 text-xs font-medium text-slate-700 dark:bg-slate-700 dark:text-slate-200"
+              data-testid="role-badge"
+            >
+              Role: {effectiveRole ?? 'none'}
+            </span>
             <div
               className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-300 text-sm font-semibold text-slate-700 dark:bg-slate-600 dark:text-slate-200"
               aria-label="User avatar"

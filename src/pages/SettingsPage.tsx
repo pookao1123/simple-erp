@@ -1,6 +1,7 @@
 import Button from '../components/Button';
 import Card from '../components/Card';
 import Input from '../components/Input';
+import RoleGuard from '../components/RoleGuard';
 
 const sections = [
   {
@@ -21,6 +22,14 @@ const sections = [
 
 export default function SettingsPage() {
   return (
+    <RoleGuard
+      allowedRoles={['admin', 'manager']}
+      fallback={
+        <div className="rounded-md border border-red-200 bg-red-50 p-4 text-red-700 dark:border-red-800 dark:bg-red-900/30 dark:text-red-300">
+          Access Denied — Admins only
+        </div>
+      }
+    >
     <div>
       <h1 className="mb-6 text-2xl font-bold text-slate-900 dark:text-white">Settings</h1>
       <div className="max-w-2xl space-y-6">
@@ -40,5 +49,6 @@ export default function SettingsPage() {
         ))}
       </div>
     </div>
+    </RoleGuard>
   );
 }
