@@ -1,0 +1,43 @@
+You are claude-codereview. Review the Phase 3 Database Schema design doc.
+
+Work in D:\VS\Project\Simple_ERP.
+The design doc is at D:\VS\MD_obsidian\Hermes\design\phase-3-database-schema.md.
+
+Read the full design doc. Then write a review report to:
+D:\VS\MD_obsidian\Hermes\job\review-phase-3-database-schema-design.md
+
+Review criteria (read the design doc first, then evaluate against these):
+
+1. RLS POLICIES — Do the SELECT/INSERT/UPDATE/DELETE policies prevent cross-user data leakage? Can a regular user read/modify another user's rows? Can an admin bypass correctly? Are there any missing policies (e.g. a table with RLS enabled but no SELECT policy = no one can read it)?
+
+2. INDEXES — Do the indexes cover the expected query patterns: listing (most recent first per user), filtering by status, lookups by customer_id, uniqueness on (user_id, invoice_no)? Are there missing indexes that would cause slow queries as data grows?
+
+3. FOREIGN KEYS — Are ON DELETE actions correct? customers→invoices should be RESTRICT (don't delete a customer with outstanding invoices). products→line_items should be SET NULL (invoice line survives product deletion). invoices→line_items should be CASCADE (delete invoice removes lines). Are there any missing FKs?
+
+4. DATA TYPES — Are DECIMAL precisions sufficient? (price decimal(10,2) = max $99,999,999.99 — enough for MVP but maybe tight for high-value invoices. invoice totals decimal(12,2) = max ~$1 billion — fine.) Are there any columns that should be NOT NULL but aren't, or vice versa?
+
+5. SEED DATA — Is it realistic, deterministic, and sufficient to exercise the dashboard (5 customers, 10 products, 20 invoices with a mix of statuses including paid and overdue)?
+
+6. STATE MACHINE — Does the invoice status design cover the transitions described? Are there unreachable states or missing transitions?
+
+7. VIEWS — Is the invoice_totals view correct? Does it read stored values (correct) or try to recompute (would be wrong)?
+
+8. MIGRATION ORDER — Is 001→005 the correct order (customers and products before invoices, invoices before line_items)?
+
+9. OPEN QUESTIONS — Are all 7 open questions legitimately open (need user decision), or are some design decisions masquerading as questions?
+
+10. MISSING PIECES — Is there anything essential this design doc doesn't cover that the implementing agent (claude-database) will need to know? (e.g. trigger for updated_at auto-update, invoice_no generation strategy details, etc.)
+
+Report format:
+- Summary: 2-3 sentences on overall design quality
+- Findings table: | # | Severity (critical/major/minor/cosmetic) | Area | Finding | Recommendation |
+- Each finding numbered and specific (reference the section/line in the design doc)
+- Critical = blocks implementation (security hole, data loss risk)
+- Major = should fix before merge (slow query, missing FK, bad default)
+- Minor = nice to fix (naming, comment, edge case)
+- Cosmetic = style only
+- Open questions assessment: which are legitimately open, which should be decided now
+- Missing pieces: list anything the implementing agent needs
+- Sign-off recommendation: approve / approve with minor fixes / rework needed
+
+Keep it concrete. Don't say "looks good" without specifics. If you find nothing wrong, say so and explain why each criterion passed.
