@@ -3,8 +3,8 @@
 **Date:** 2026-09-20
 **Status:** Active planning document
 **Design Loop (Obsidian):** `../MD_obsidian/Hermes/design-loop-engineering-plan.md` — design-first process, context management, status bar UI
-**Current Phase (Obsidian):** `../MD_obsidian/Hermes/design/phase-3-database-schema.md` — Phase 3 schema design (approved)
-**Review Report (Obsidian):** `../MD_obsidian/Hermes/job/review-phase-3-database-schema-design.md` — claude-codereview findings
+**Current Phase (Obsidian):** `../MD_obsidian/Hermes/design/phase-4-api-spec.md` — Phase 4 API spec (30 endpoints, approved, ready for Phase 5)
+**Review Report (Obsidian):** `../MD_obsidian/Hermes/job/review-phase-4-api-spec-design.md` — claude-codereview report, all findings resolved
 
 ---
 
