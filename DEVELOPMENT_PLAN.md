@@ -1,7 +1,10 @@
 # Simple ERP Web System — Development Plan
 
-**Date:** 2026-09-20  
+**Date:** 2026-09-20
 **Status:** Active planning document
+**Design Loop (Obsidian):** `../MD_obsidian/Hermes/design-loop-engineering-plan.md` — design-first process, context management, status bar UI
+**Current Phase (Obsidian):** `../MD_obsidian/Hermes/design/phase-3-database-schema.md` — Phase 3 schema design (approved)
+**Review Report (Obsidian):** `../MD_obsidian/Hermes/job/review-phase-3-database-schema-design.md` — claude-codereview findings
 
 ---
 
