@@ -101,6 +101,7 @@
 | **claude-testing** | Unit/integration/E2E test strategy, test data, fixtures, coverage targets, CI/CD test integration | Haiku | Test design & coverage, test-related tooling, reported to operating for CI setup | Does NOT: Implement features (done by feature agents) |
 | **claude-operating** | Deployment, CI/CD (GitHub Actions), environment config, secrets in .env, monitoring, Git workflow, backups | Haiku | Infrastructure as code, deployment automation, runtime operations | Does NOT: Application code, database schema, API design |
 
+| **claude-codereview** | PR reviews, diff reviews, bug/security/style checks, review reports | Haiku | Code review only — reads code, writes findings | Does NOT: Implement code, design schema, write tests |
 ---
 
 ## C. Phases & Steps
