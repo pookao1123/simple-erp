@@ -105,7 +105,10 @@ export interface ByMonthRow {
 
 export interface RevenueByCustomerRow {
   customer_id: string;
-  total_amount: number;
+  customer_name: string;
+  email: string;
+  total_paid: number;
+  invoice_count: number;
 }
 
 export const apiDashboard = {
@@ -276,14 +279,19 @@ export const apiInvoices = {
     date_from?: string | null;
     date_to?: string | null;
     search?: string | null;
+    from?: string | null;
+    to?: string | null;
   } = {}) {
     const q = new URLSearchParams();
     if (params.page) q.set('page', String(params.page));
     if (params.limit) q.set('limit', String(params.limit));
     if (params.status) q.set('status', params.status);
     if (params.customer_id) q.set('customer_id', params.customer_id);
-    if (params.date_from) q.set('date_from', params.date_from);
-    if (params.date_to) q.set('date_to', params.date_to);
+    // Spec uses from/to; also accept date_from/date_to as aliases for compatibility.
+    if (params.from) q.set('from', params.from);
+    if (params.to) q.set('to', params.to);
+    if (params.date_from && !params.from) q.set('date_from', params.date_from);
+    if (params.date_to && !params.to) q.set('date_to', params.date_to);
     if (params.search) q.set('search', params.search);
     const qs = q.toString();
     return call<Paginated<Invoice>>(`/invoices${qs ? `?${qs}` : ''}`);

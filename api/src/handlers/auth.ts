@@ -38,7 +38,6 @@ async function signup(req: VercelRequest, res: VercelResponse) {
     if (error.status && error.status < 500) throw errors.invalidInput({}, error.message);
     throw errors.internal();
   }
-  // Supabase returns an obfuscated user with no identities when the email already exists.
   if (!data.user || data.user.identities?.length === 0) throw errors.conflict('Email already registered');
 
   const { error: roleErr } = await getAdminClient()
@@ -71,9 +70,10 @@ async function logout(req: VercelRequest, res: VercelResponse) {
   sendJson(res, 200, { message: 'Logged out' });
 }
 
+// Refresh token from Authorization header (per spec Finding #8 resolution).
 async function refreshToken(req: VercelRequest, res: VercelResponse) {
-  const { refresh_token } = parseBody(req, refreshSchema);
-  const { data, error } = await createAuthClient().auth.refreshSession({ refresh_token });
+  const auth = await authenticate(req);
+  const { data, error } = await createAuthClient().auth.refreshSession({ refresh_token: auth.token });
   if (error || !data.session) throw errors.unauthorized('Token expired and cannot be refreshed');
   sendJson(res, 200, { session: formatSession(data.session) });
 }
@@ -97,6 +97,52 @@ async function me(req: VercelRequest, res: VercelResponse) {
   });
 }
 
+// Get current user profile (read-only, for Settings display).
+async function getUserProfile(req: VercelRequest, res: VercelResponse) {
+  const auth = await authenticate(req);
+  const { data } = await getAdminClient()
+    .from('users_with_roles')
+    .select('id, email, name, role, created_at')
+    .eq('id', auth.userId)
+    .maybeSingle();
+  if (!data) throw errors.notFound('User');
+  sendJson(res, 200, { user: { id: data.id, email: data.email, name: data.name, role: data.role, created_at: data.created_at } });
+}
+
+// Update current user profile (name only — email is identity, cannot change).
+async function updateUserProfile(req: VercelRequest, res: VercelResponse) {
+  const auth = await authenticate(req);
+  const { name } = parseBody(req, z.object({ name: z.string().min(1).max(100).optional() }));
+  // Update Supabase user_metadata + return the updated user.
+  const { data: updateData, error: updateError } = await getAdminClient().auth.admin.updateUserById(auth.userId, {
+    user_metadata: name ? { name } : undefined,
+  });
+  if (updateError) throw errors.internal();
+  const role = await getRole(auth.userId);
+  sendJson(res, 200, { user: formatUser(updateData.user, role) });
+}
+
+// Change password — validate current password, then set new one.
+async function changePassword(req: VercelRequest, res: VercelResponse) {
+  const auth = await authenticate(req);
+  const { current_password, new_password, confirm_password } = parseBody(req, z.object({
+    current_password: z.string().min(1),
+    new_password: z.string().min(8).max(100),
+    confirm_password: z.string().min(8).max(100),
+  }));
+  if (new_password !== confirm_password) {
+    throw errors.invalidInput({ fieldErrors: { confirm_password: ['Passwords do not match'] } }, 'Passwords do not match');
+  }
+  // Verify current password by attempting sign-in.
+  const { error: signInError } = await createAuthClient().auth.signInWithPassword({ email: auth.user.email!, password: current_password });
+  if (signInError) throw errors.unauthorized('Current password is incorrect');
+
+  const { error } = await getAdminClient().auth.admin.updateUserById(auth.userId, { password: new_password });
+  if (error) throw errors.internal();
+  sendJson(res, 200, { message: 'Password changed successfully' });
+}
+
+// Forgot password — send reset email.
 async function forgotPassword(req: VercelRequest, res: VercelResponse) {
   const { email } = parseBody(req, z.object({ email: z.string().email() }));
   const { error } = await createAuthClient().auth.resetPasswordForEmail(email, {
@@ -111,6 +157,7 @@ async function forgotPassword(req: VercelRequest, res: VercelResponse) {
   sendJson(res, 200, { message: 'If the email is associated with an account, a password reset link has been sent.' });
 }
 
+// Reset password — verify token + set new password.
 async function resetPassword(req: VercelRequest, res: VercelResponse) {
   const { token, new_password, confirm_password } = parseBody(req, z.object({
     token: z.string().min(1),
@@ -134,6 +181,17 @@ async function resetPassword(req: VercelRequest, res: VercelResponse) {
   sendJson(res, 200, { message: 'Password reset successfully' });
 }
 
+// List all users (admin only).
+async function listUsers(req: VercelRequest, res: VercelResponse) {
+  const auth = await authenticate(req);
+  if (!auth.isAdmin) throw errors.forbidden('Admin access required');
+  const { data } = await getAdminClient()
+    .from('users_with_roles')
+    .select('id, email, name, role, created_at')
+    .order('created_at', { ascending: false });
+  sendJson(res, 200, { users: data ?? [] });
+}
+
 export async function handleAuth(req: VercelRequest, res: VercelResponse, url: URL) {
   const [, action, ...extra] = getSegments(url);
   if (extra.length) throw errors.notFound('Endpoint');
@@ -151,14 +209,21 @@ export async function handleAuth(req: VercelRequest, res: VercelResponse, url: U
       assertMethod(req, ['POST']);
       return refreshToken(req, res);
     case 'me':
-      assertMethod(req, ['GET']);
-      return me(req, res);
+      if (req.method === 'GET') return getUserProfile(req, res);
+      if (req.method === 'PUT') return updateUserProfile(req, res);
+      throw errors.notAllowed();
+    case 'change-password':
+      assertMethod(req, ['POST']);
+      return changePassword(req, res);
     case 'forgot-password':
       assertMethod(req, ['POST']);
       return forgotPassword(req, res);
     case 'reset-password':
       assertMethod(req, ['POST']);
       return resetPassword(req, res);
+    case 'users':
+      assertMethod(req, ['GET']);
+      return listUsers(req, res);
     default:
       throw errors.notFound('Endpoint');
   }
