@@ -35,6 +35,11 @@ async function call<T>(
     } catch { /* ignore */ }
     throw new Error(msg);
   }
+  // Detect non-JSON responses (e.g. Vite dev server returning SPA HTML for unknown routes)
+  const contentType = res.headers.get('content-type') ?? '';
+  if (!contentType.includes('application/json')) {
+    throw new Error('API not available locally — /api/v1/* routes are Vercel serverless functions. Deploy to Vercel or set up a dev proxy.');
+  }
   if (res.status === 204) return undefined as T;
   return res.json() as Promise<T>;
 }
