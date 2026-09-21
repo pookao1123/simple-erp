@@ -2,7 +2,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import type { Session, User } from '@supabase/supabase-js';
 import { authenticate, getRole } from '../lib/auth';
 import { errors, sendJson } from '../lib/error-handler';
-import { loginSchema, refreshSchema, signupSchema } from '../lib/schemas';
+import { loginSchema, signupSchema } from '../lib/schemas';
 import { createAuthClient, getAdminClient } from '../lib/supabase-admin';
 import { assertMethod, getSegments, parseBody } from '../lib/utils';
 import { z } from 'zod';
@@ -76,25 +76,6 @@ async function refreshToken(req: VercelRequest, res: VercelResponse) {
   const { data, error } = await createAuthClient().auth.refreshSession({ refresh_token: auth.token });
   if (error || !data.session) throw errors.unauthorized('Token expired and cannot be refreshed');
   sendJson(res, 200, { session: formatSession(data.session) });
-}
-
-async function me(req: VercelRequest, res: VercelResponse) {
-  const auth = await authenticate(req);
-  const { data } = await getAdminClient()
-    .from('users_with_roles')
-    .select('*')
-    .eq('id', auth.userId)
-    .maybeSingle();
-  const user = data ?? { ...formatUser(auth.user, auth.isAdmin ? 'admin' : await getRole(auth.userId)) };
-  sendJson(res, 200, {
-    user: {
-      id: user.id,
-      email: user.email,
-      name: user.name ?? (auth.user.user_metadata?.name as string | undefined) ?? null,
-      role: user.role,
-      created_at: user.created_at,
-    },
-  });
 }
 
 // Get current user profile (read-only, for Settings display).
@@ -211,7 +192,7 @@ export async function handleAuth(req: VercelRequest, res: VercelResponse, url: U
     case 'me':
       if (req.method === 'GET') return getUserProfile(req, res);
       if (req.method === 'PUT') return updateUserProfile(req, res);
-      throw errors.notAllowed();
+      throw errors.notAllowed(req.method ?? 'UNKNOWN');
     case 'change-password':
       assertMethod(req, ['POST']);
       return changePassword(req, res);

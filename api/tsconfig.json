@@ -4,7 +4,6 @@
     "lib": ["ES2022"],
     "module": "CommonJS",
     "moduleResolution": "node",
-    "outDir": "../.vercel/build_output",
     "rootDir": ".",
     "strict": true,
     "esModuleInterop": true,
