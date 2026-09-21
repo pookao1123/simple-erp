@@ -40,7 +40,7 @@ const columns: Column<Invoice>[] = [
   {
     key: 'status',
     header: 'Status',
-    render: (r) => <Badge variant={statusVariant[r.status]}>{r.status}</Badge>,
+    render: (r) => <Badge variant={statusVariant[r.status] as 'default' | 'success' | 'warning' | 'danger' | 'info'}>{r.status}</Badge>,
   },
 ];
 
