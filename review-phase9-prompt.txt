@@ -1,6 +1,0 @@
-You are claude-codereview. Review the Phase 9 Advanced Features design doc.
-
-Work in D:\VS\Project\Simple_ERP.
-The design doc is at D:\VS\MD_obsidian\Hermes\design\phase-9-advanced-features.md.
-
-Read the full design doc first....[truncated]
