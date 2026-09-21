@@ -9,6 +9,8 @@ import LoginPage from './pages/LoginPage';
 import ProductsPage from './pages/ProductsPage';
 import SettingsPage from './pages/SettingsPage';
 import SignupPage from './pages/SignupPage';
+import AuditLogPage from './pages/AuditLogPage';
+import ReportsPage from './pages/ReportsPage';
 
 export default function App() {
   return (
@@ -29,6 +31,8 @@ export default function App() {
             <Route path="/customers" element={<CustomersPage />} />
             <Route path="/products" element={<ProductsPage />} />
             <Route path="/settings" element={<SettingsPage />} />
+            <Route path="/reports" element={<ReportsPage />} />
+            <Route path="/audit-log" element={<AuditLogPage />} />
           </Route>
         </Routes>
       </AuthProvider>

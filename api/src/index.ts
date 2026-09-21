@@ -4,6 +4,8 @@ import { handleCustomers } from './handlers/customers';
 import { handleDashboard } from './handlers/dashboard';
 import { handleInvoices } from './handlers/invoices';
 import { handleProducts } from './handlers/products';
+import { handleAuditLog } from './handlers/audit-log';
+import { handleReports } from './handlers/reports';
 import { errors, sendError } from './lib/error-handler';
 
 const ROUTES: Record<string, (req: VercelRequest, res: VercelResponse, url: URL) => Promise<unknown>> = {
@@ -12,6 +14,8 @@ const ROUTES: Record<string, (req: VercelRequest, res: VercelResponse, url: URL)
   products: handleProducts,
   invoices: handleInvoices,
   dashboard: handleDashboard,
+  audit_log: handleAuditLog,
+  reports: handleReports,
 };
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {

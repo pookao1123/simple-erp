@@ -375,3 +375,33 @@ export const apiInvoices = {
     );
   },
 };
+
+export interface AuditLogEntry {
+  id: string;
+  action: string;
+  table_name: string;
+  record_id: string;
+  record_no?: string;
+  user_id: string;
+  user_name: string;
+  old_values?: Record<string, unknown>;
+  new_values?: Record<string, unknown>;
+  created_at: string;
+}
+
+export interface AuditLogPage {
+  data: AuditLogEntry[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
+export const apiAuditLog = {
+  async list(params: { page?: number; limit?: number; table?: string }): Promise<AuditLogPage> {
+    const query = new URLSearchParams();
+    if (params.page) query.set('page', String(params.page));
+    if (params.limit) query.set('limit', String(params.limit));
+    if (params.table) query.set('table', params.table);
+    return call<AuditLogPage>(`/audit_log/list?${query}`);
+  },
+};

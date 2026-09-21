@@ -8,6 +8,8 @@ const navItems: { to: string; label: string; end?: boolean; roles?: string[] }[]
   { to: '/invoices', label: 'Invoices' },
   { to: '/customers', label: 'Customers' },
   { to: '/products', label: 'Products' },
+  { to: '/reports', label: 'Reports' },
+  { to: '/audit-log', label: 'Audit Log' },
   { to: '/settings', label: 'Settings', roles: ['admin', 'manager'] },
 ];
 
